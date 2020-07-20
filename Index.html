@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.15.1/dist/phaser-arcade-physics.min.js"></script>
+</head>
+
+<body>
+
+    <script>
+        const WIDTH = 800;
+        const HEIGHT = 600;
+        var config = {
+            type: Phaser.AUTO,
+            width: WIDTH,
+            height: HEIGHT,
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 200 }
+                }
+            },
+            scene: {
+                preload: preload,
+                create: create
+            }
+        };
+
+        var game = new Phaser.Game(config);
+        // var masterCircle;
+        // var childCircle;
+        var masterGroup;
+        var masterObject;
+        var circleObject;
+        var graphics;
+        var circleGroup;
+        var container;
+
+        function preload() {
+            this.load.image('circle', 'images/one.png');
+            this.load.image('master', 'images/master.png');
+        }
+
+        function create() {
+            masterGroup = this.add.group();
+            circleGroup = this.add.group();
+            drawChildCirlces();
+
+            // circleObject = this.add.sprite(100, 100, 'circle').setInteractive();
+            masterObject = this.add.sprite(0, 0, 'master');
+            graphics = this.add.graphics({ lineStyle: { width: 2, color: 0xaa00aa } });
+
+            container = this.add.container(50,50);
+            container.add([masterObject]);
+            container.setSize(64, 64);
+            container.setInteractive();
+            this.input.setDraggable(container);
+
+            // circleObject.on('pointerdown', function () {
+            //     masterGroup.add(this);
+
+            //     const line = new Phaser.Geom.Line(circleObject.x, circleObject.y, masterObject.x, masterObject.y);
+            //     graphics.strokeLineShape(line);
+            //     graphics.setDepth(-1);
+            // })
+
+            this.input.on('drag', function (pointer, gameObject, dragX, dragY) {
+                gameObject.x = dragX;
+                gameObject.y = dragY;
+            });
+        }
+
+
+        function drawChildCirlces() {
+            for (var i = 0; i < 20; i++) {
+                circleGroup.create(Phaser.Math.Between(200, 600), Phaser.Math.Between(100, 500), 'circle', Phaser.Math.Between(0, 4));
+            }
+
+            circleGroup.children.iterate(function(child){
+
+                child.setInteractive();
+                child.on('pointerdown', function () {
+                    child.x = child.x - container.x;
+                    child.y = child.y - container.y;
+                    container.add(child);
+                    container.add(graphics);
+
+                    const line = new Phaser.Geom.Line(child.x, child.y, masterObject.x, masterObject.y);
+                    graphics.strokeLineShape(line);
+                    graphics.setDepth(-1);
+                });
+            });
+        }
+
+        function childCircleDrag(pointer, gameObject, dragX, dragY) {
+
+            console.log((circleObject.x - masterObject.x));
+            console.log((circleObject.y - masterObject.y));
+            console.log('change x', (circleObject.x - masterObject.x) + dragX);
+            console.log('change y', (circleObject.y - masterObject.y) + dragY);
+
+            circleObject.x = (circleObject.x - masterObject.x) + dragX;
+            circleObject.y = (circleObject.y - masterObject.y) + dragY;
+
+            console.log('new x', circleObject.x);
+            console.log('new y', circleObject.y);
+        }
+    </script>
+
+</body>
+
+</html>
