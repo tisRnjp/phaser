@@ -44,25 +44,17 @@
         function create() {
             masterGroup = this.add.group();
             circleGroup = this.add.group();
-            drawChildCirlces();
+            drawChildCirlces(this);
 
             // circleObject = this.add.sprite(100, 100, 'circle').setInteractive();
             masterObject = this.add.sprite(0, 0, 'master');
             graphics = this.add.graphics({ lineStyle: { width: 2, color: 0xaa00aa } });
 
-            container = this.add.container(50,50);
+            container = this.add.container(50, 50);
             container.add([masterObject]);
             container.setSize(64, 64);
             container.setInteractive();
             this.input.setDraggable(container);
-
-            // circleObject.on('pointerdown', function () {
-            //     masterGroup.add(this);
-
-            //     const line = new Phaser.Geom.Line(circleObject.x, circleObject.y, masterObject.x, masterObject.y);
-            //     graphics.strokeLineShape(line);
-            //     graphics.setDepth(-1);
-            // })
 
             this.input.on('drag', function (pointer, gameObject, dragX, dragY) {
                 gameObject.x = dragX;
@@ -71,26 +63,49 @@
         }
 
 
-        function drawChildCirlces() {
-            for (var i = 0; i < 20; i++) {
-                circleGroup.create(Phaser.Math.Between(200, 600), Phaser.Math.Between(100, 500), 'circle', Phaser.Math.Between(0, 4));
-            }
+    function drawChildCirlces(parent) {
+        for (var i = 0; i < 20; i++) {
+            circleGroup.create(Phaser.Math.Between(200, 600), Phaser.Math.Between(100, 500), 'circle', Phaser.Math.Between(0, 4));
+        }
 
-            circleGroup.children.iterate(function(child){
+        circleGroup.children.iterate(function (child) {
 
-                child.setInteractive();
-                child.on('pointerdown', function () {
+            child.setInteractive();
+            child.on('pointerdown', function () {
+                let childGraphics = parent.add.graphics({ lineStyle: { width: 2, color: 0xaa00aa } });
+
+                if (container.exists(child)) {
+                    let index = container.getIndex(child);
+
+                    console.log('index', index);
+
+                    container.removeAt(index, false);
+                    container.removeAt(index - 1, false);
+                }
+                else {
+                    console.log('before', container.length);
                     child.x = child.x - container.x;
                     child.y = child.y - container.y;
-                    container.add(child);
-                    container.add(graphics);
 
-                    const line = new Phaser.Geom.Line(child.x, child.y, masterObject.x, masterObject.y);
-                    graphics.strokeLineShape(line);
-                    graphics.setDepth(-1);
-                });
+                    let line;
+                    if (container.length > 1)
+                        line = new Phaser.Geom.Line(child.x, child.y, container.getAt(container.length - 1).x, container.getAt(container.length - 1).y);
+                    else
+                        line = new Phaser.Geom.Line(child.x, child.y, masterObject.x, masterObject.y);
+                    container.add(child);
+                    // container.add(childGraphics);
+                    childGraphics.strokeLineShape(line);
+                    // childGraphics.setDepth(-1);
+                    container.bringToTop(child);
+
+                    container.add(childGraphics);
+                    container.sendToBack(childGraphics);
+
+                    console.log('after', container.length);
+                }
             });
-        }
+        });
+    }
 
         function childCircleDrag(pointer, gameObject, dragX, dragY) {
 
